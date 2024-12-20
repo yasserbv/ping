@@ -7,7 +7,7 @@ class connected_hosts:
         self.hosts = hosts
         self.token = token
         self.chat_id = chat_id
-        # Estado inicial de las IPs
+        # Estado inicial de las IPs con un metodo que me llama comprecion des
         self.previous_status = {ip: None for ip in self.hosts.keys()}
 
     def ping_hosts(self):
@@ -17,16 +17,19 @@ class connected_hosts:
         for ip, ip_name in zip(self.hosts.keys(), self.hosts.values()):
             command = ["ping", "-n", "1", ip]
             ping = subprocess.run(
-                command, capture_output=True, text=True, check=True)
+                command, capture_output=True, text=True)
 
             # Verificar si el host responde al ping
             if "TTL=" in ping.stdout:
-                # Solo notificar si el estado cambió
+                # Solo "notificar si el estado cambió
+                print("haciendo ping")
                 if self.previous_status[ip] == "inactiva":
                     data_1.sending_data(f"{ip_name} ahora responde.")
                 self.previous_status[ip] = "activa"
             else:
                 # Solo notificar si el estado cambió
+                print("no hace ping")
+
                 if self.previous_status[ip] == "activa":
                     data_1.sending_data(f"{ip_name} no responde.")
                 self.previous_status[ip] = "inactiva"
