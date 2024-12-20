@@ -7,12 +7,14 @@ from data_in import data
 from ping import connected_hosts
 from select_file import file
 from send_data import data_ping
+from database import database
 
 
 # Cambiar el modo de apariencia
 ctk.set_appearance_mode("light")
 data_1 = data()
 file_1 = file()
+data_list = database()
 
 # Paleta de colores
 color_blue = "#104C64"
@@ -37,7 +39,7 @@ app.rowconfigure(0, weight=1)
 base_path = os.path.dirname(os.path.abspath(__file__))
 image_path = os.path.join(base_path, 'img', 'icono_ping.png')
 icon = tk.PhotoImage(file=image_path)
-ctk.CTkLabel(frame, image=icon).grid(columnspan=2, row=0, pady=10)
+ctk.CTkLabel(frame, image=icon, text="").grid(columnspan=2, row=0, pady=10)
 
 # Entradas de texto
 ip_entry = ctk.CTkEntry(frame, font=("sans serif", 12), placeholder_text="IP",
@@ -73,16 +75,9 @@ def take_data():
     poppu(data_1.data_analysis(ip, ip_name))
 
 
-def sending_information():
-    token, chatID = file_1.get_data()
-    print(f"token and id {token},{chatID}")
-    hosts = connected_hosts(data_1.retun_data(), token, chatID)
-    hosts.ping_hosts()
-
-
 def sending_information_periodically():
-    token, chatID = file_1.get_data()
-    hosts = connected_hosts(data_1.retun_data(), token, chatID)
+    token, chat_id = file_1.get_data()
+    hosts = connected_hosts(data_list.read_data(), token, chat_id)
     while True:
         hosts.ping_hosts()
         threading.Event().wait(5)  # Espera 5 segundos antes de volver a ejecutar
@@ -101,12 +96,12 @@ def open_file():
 
 
 def start():
-    token, chatID = file_1.get_data()
-    if token == "" or chatID == "":
+    token, chat_id = file_1.get_data()
+    if token == "" or chat_id == "":
         popup_1 = popup("seleccione el archivo config.txt")
         popup_1.run()
     else:
-        sending_info = data_ping(token, chatID)
+        sending_info = data_ping(token, chat_id)
         sending_info.sending_data("proceso iniciado")
         start_sending_thread()
 
