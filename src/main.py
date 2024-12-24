@@ -8,6 +8,7 @@ from ping import connected_hosts
 from select_file import file
 from send_data import data_ping
 from database import database
+from menu import menu_popup
 
 
 # Cambiar el modo de apariencia
@@ -64,6 +65,11 @@ bt_search_file = ctk.CTkButton(frame, font=("sans serif", 12), fg_color=color_or
 bt_search_file.grid(column=1, row=5, padx=40, pady=0)
 
 
+bt_menu = ctk.CTkButton(frame, font=("sans serif", 12), fg_color=color_orenge, hover_color=color_orange_2,
+                        corner_radius=12, border_width=2, text="MENU", height=10, width=20, command=lambda: show_menu())
+bt_menu.place(x=10, y=10)
+
+
 def poppu(dato):
     popup_1 = popup(dato)
     popup_1.run()
@@ -77,7 +83,8 @@ def take_data():
 
 def sending_information_periodically():
     token, chat_id = file_1.get_data()
-    hosts = connected_hosts(data_list.read_data(), token, chat_id)
+    _, get_data_database = data_list.read_data()
+    hosts = connected_hosts(get_data_database, token, chat_id)
     while True:
         hosts.ping_hosts()
         threading.Event().wait(5)  # Espera 5 segundos antes de volver a ejecutar
@@ -104,6 +111,11 @@ def start():
         sending_info = data_ping(token, chat_id)
         sending_info.sending_data("proceso iniciado")
         start_sending_thread()
+
+
+def show_menu():
+    menu_1 = menu_popup()
+    menu_1.run()
 
 
 app.mainloop()

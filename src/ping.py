@@ -7,8 +7,9 @@ class connected_hosts:
         self.hosts = hosts
         self.token = token
         self.chat_id = chat_id
-        # Estado inicial de las IPs con un metodo que me llama comprecion des
-        self.previous_status = {ip: None for ip in self.hosts.keys()}
+        # Estado inicial de las IPs con un metodo que me llama comprecion de listas
+        self.previous_status = {ip: "activa" for ip in self.hosts.keys()}
+        # print(self.previous_status)
 
     def ping_hosts(self):
         # Instancia para enviar datos a Telegram
@@ -26,10 +27,12 @@ class connected_hosts:
                 if self.previous_status[ip] == "inactiva":
                     data_1.sending_data(f"{ip_name} ahora responde.")
                 self.previous_status[ip] = "activa"
+                print(self.previous_status)
             else:
                 # Solo notificar si el estado cambió
+                print(f" antes del if {self.previous_status}")
                 print("no hace ping")
-
                 if self.previous_status[ip] == "activa":
                     data_1.sending_data(f"{ip_name} no responde.")
                 self.previous_status[ip] = "inactiva"
+                print(f" despues del if {self.previous_status}")

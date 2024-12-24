@@ -24,8 +24,7 @@ class database():
         conn.commit()
         conn.close()
         list_hosts = {ip: nombre for _, nombre, ip, _ in datos}
-        print(list_hosts)
-        return list_hosts
+        return datos, list_hosts
 
     def search(self, host_mane):
         conn = sql.connect("hosts.db")
@@ -57,4 +56,4 @@ class database():
 host_1 = database()
 # host_1.insert_data("antena selva 1", "192.168.1.23", 1)
 # host_1.read_data()
-host_1.delete_data()
+# host_1.delete_data()
