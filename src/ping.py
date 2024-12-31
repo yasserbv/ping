@@ -23,16 +23,12 @@ class connected_hosts:
             # Verificar si el host responde al ping
             if "TTL=" in ping.stdout:
                 # Solo "notificar si el estado cambió
-                print("haciendo ping")
                 if self.previous_status[ip] == "inactiva":
                     data_1.sending_data(f"{ip_name} ahora responde.")
                 self.previous_status[ip] = "activa"
-                print(self.previous_status)
+
             else:
                 # Solo notificar si el estado cambió
-                print(f" antes del if {self.previous_status}")
-                print("no hace ping")
                 if self.previous_status[ip] == "activa":
                     data_1.sending_data(f"{ip_name} no responde.")
                 self.previous_status[ip] = "inactiva"
-                print(f" despues del if {self.previous_status}")
