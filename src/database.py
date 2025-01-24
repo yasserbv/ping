@@ -34,6 +34,7 @@ class database():
         datos = cursor.fetchall()
         conn.commit()
         conn.close()
+
         return datos
 
     def update_data(self, nombre, host, estado):
@@ -65,5 +66,6 @@ host_1 = database()
 # host_1.insert_data("antena selva 1", "192.168.1.23", 1)
 # host_1.read_data()
 # host_1.delete_data()
+# host_1.update_state("192.168.110.117", 1)
 # host_1.update_state("192.168.110.239", 1)
 # host_1.search("192.168.110.117")

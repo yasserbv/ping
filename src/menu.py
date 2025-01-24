@@ -1,13 +1,16 @@
 import customtkinter as ctk
 from database import database
 from tkinter import ttk
+import threading
 
 
 class menu_popup:
     _instance = None  # Variable de clase para almacenar la instancia única
 
     def __new__(self):
-
+        self.stop_thread = False
+        self.thread = None
+        self.selecdata = database()
         if self._instance is None:
             self._instance = super().__new__(self)
             self._instance.show_menu()  # Crear la ventana en el primer uso
@@ -17,8 +20,8 @@ class menu_popup:
         return self._instance  # Devuelve la instancia única
 
     def show_menu(self):
-        selecdata = database()
-        data, _ = selecdata.read_data()
+
+        data, _ = self.selecdata.read_data()
         color_orange_2 = "#f37f40"
         color_white = "#FFFFFF"
         # Crear ventana principal solo si no existe
@@ -35,24 +38,24 @@ class menu_popup:
         self.button_frame = ctk.CTkFrame(self.main_frame)
         self.button_frame.pack(side="top", fill="x", pady=10)
 
-        host = ctk.CTkButton(
-            self.button_frame, text="Listado de los hosts", command=lambda: self.update_frame(data))
-        host.pack(side="left", padx=5)
+        self.host = ctk.CTkButton(
+            self.button_frame, text="Listado de los hosts", command=lambda: self.star_thread_frame())
+        self.host.pack(side="left", padx=5)
 
-        opcion_2 = ctk.CTkButton(self.button_frame, text="Opción 2",
-                                 command=self.show_frame_2)
-        opcion_2.pack(side="left", padx=5)
+        self.opcion_2 = ctk.CTkButton(self.button_frame, text="Opción 2",
+                                      command=self.show_frame_2)
+        self.opcion_2.pack(side="left", padx=5)
 
-        opcion_3 = ctk.CTkButton(self.button_frame, text="Opción 3",
-                                 command=self.show_frame_3)
-        opcion_3.pack(side="left", padx=5)
+        self.opcion_3 = ctk.CTkButton(self.button_frame, text="Opción 3",
+                                      command=self.show_frame_3)
+        self.opcion_3.pack(side="left", padx=5)
 
-        search_data = ctk.CTkEntry(self.button_frame, font=("sans serif", 12), placeholder_text="IP",
-                                   text_color=color_orange_2, fg_color=color_white, width=220, height=40)
-        search_data.pack(side="left", padx=5)
+        self.search_data = ctk.CTkEntry(self.button_frame, font=("sans serif", 12), placeholder_text="IP",
+                                        text_color=color_orange_2, fg_color=color_white, width=220, height=40)
+        self.search_data.pack(side="left", padx=5)
 
         bt_search = ctk.CTkButton(self.button_frame, text="Search",
-                                  command=lambda: self.update_frame(selecdata.search(search_data.get())), width=10, height=30)
+                                  command=lambda: self.stop_thread_frame(False), width=10, height=30)
         bt_search.pack(side="left", padx=5)
 
         # Crear Frames secundarios
@@ -65,15 +68,38 @@ class menu_popup:
 
         # Mostrar la primera vista por defecto
         self.show_frame(self.frame_1)
+        self.star_thread_frame()
 
-    def update_frame(self, search_query):
+    def update_frame(self, query, frame, name_frame):
 
-        if hasattr(self, 'frame_1') and self.frame_1.winfo_exists():
-            self.frame_1.destroy()
+        if hasattr(self, name_frame) and frame.winfo_exists():
+            frame.destroy()
 
     # Crea un nuevo frame con los datos filtrados
-        self.frame_1 = self.create_frame_1(search_query)
-        self.show_frame(self.frame_1)
+        frame = self.create_frame_1(query)
+        self.show_frame(frame)
+
+    def update_frame_periodically(self):
+        while not self.stop_thread:
+            selecdata = database()
+            data, _ = selecdata.read_data()
+            self.update_frame(data, self.frame_1, "frame_1")
+            threading.Event().wait(2)
+
+    def star_thread_frame(self):
+        self.stop_thread = False
+        self.thread = threading.Thread(target=self.update_frame_periodically)
+        self.thread.daemon = True
+        self.thread.start()
+        print("hilo iniciado")
+
+    def stop_thread_frame(self, value):
+        self.stop_thread = True
+        self.update_frame(self.selecdata.search(
+            self.search_data.get()), self.frame_1, "frame_1")
+        if self.thread:
+            self.thread.join()  # Espera a que el hilo finalice
+        print("Hilo detenido.")
 
     def create_frame(self, title, content):
         """Crear un CTkFrame con título y contenido."""
@@ -95,10 +121,18 @@ class menu_popup:
         for col in columnas:
             tabla.heading(col, text=col)
             tabla.column(col, anchor="center")
+            tabla.tag_configure("error", background="#8B0000")
+            tabla.tag_configure("default", background="#FFFFFF")
 
     # Agregar filas
         for fila in host_listing:
-            tabla.insert("", "end", values=fila)
+
+            # print(fila)
+            state = fila[-1]
+            if state == 0:
+                tabla.insert("", "end", values=fila, tags=("error",))
+            else:
+                tabla.insert("", "end", values=fila, tags=("default",))
 
         return frame
 

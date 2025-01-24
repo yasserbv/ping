@@ -21,6 +21,6 @@ class data:
                 data.data_list[ip] = ip_name
             message = self.host_in.insert_data(ip_name, ip, 1)
             if message == 1:
-                return f"EL host:{ip_name} fue ingrezado con la IP:{ip}"
+                return f"Se ingreso el host:{ip_name} con la IP:{ip}"
             else:
                 return "Estos datos estan repetidos"
