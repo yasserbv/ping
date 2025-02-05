@@ -7,19 +7,29 @@ import threading
 class menu_popup:
     _instance = None  # Variable de clase para almacenar la instancia única
 
-    def __new__(self):
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance.__init__()  # Inicializar la instancia
+        return cls._instance  # Devuelve la instancia única
+
+    def __init__(self):
         self.stop_thread = False
         self.thread = None
         self.selecdata = database()
-        if self._instance is None:
-            self._instance = super().__new__(self)
-            self._instance.show_menu()  # Crear la ventana en el primer uso
-        else:
+        self.app = None  # Ventana principal (inicialmente no existe)
+        # Referencia al botón en la ventana principal (inicialmente no existe)
+        self.boton = None
 
-            self._instance.añadir_texto()  # Llamar para actualizar el contenido
-        return self._instance  # Devuelve la instancia única
+    def show_menu(self, boton=None):
+        # Guardar la referencia al botón
+        if boton:
+            self.boton = boton
 
-    def show_menu(self):
+        # Verificar si la ventana ya está abierta
+        if self.app is not None and self.app.winfo_exists():
+            self.app.lift()  # Traer la ventana al frente si ya está abierta
+            return  # Salir del método sin crear una nueva ventana
 
         data, _ = self.selecdata.read_data()
         color_orange_2 = "#f37f40"
@@ -55,8 +65,16 @@ class menu_popup:
         self.search_data.pack(side="left", padx=5)
 
         bt_search = ctk.CTkButton(self.button_frame, text="Search",
-                                  command=lambda: self.stop_thread_frame(False), width=10, height=30)
+                                  command=lambda: self.stop_thread_frame(), width=10, height=30)
         bt_search.pack(side="left", padx=5)
+
+        btn_update = ttk.Button(self.button_frame, text="Update",
+                                state="disable")
+        btn_update.pack(side="left", padx=10, pady=10)
+
+        btn_delete = ttk.Button(self.button_frame, text="Delete",
+                                state="disable")
+        btn_delete.pack(side="left", padx=10, pady=10)
 
         # Crear Frames secundarios
         self.frame_1 = self.create_frame_1(data)
@@ -70,12 +88,18 @@ class menu_popup:
         self.show_frame(self.frame_1)
         self.star_thread_frame()
 
-    def update_frame(self, query, frame, name_frame):
+        # Manejar el cierre de la ventana
+        self.app.protocol("WM_DELETE_WINDOW", self.cerrar_ventana)
 
+        # Deshabilitar el botón si existe
+        if self.boton:
+            self.boton.configure(state="disabled")
+
+    def update_frame(self, query, frame, name_frame):
         if hasattr(self, name_frame) and frame.winfo_exists():
             frame.destroy()
 
-    # Crea un nuevo frame con los datos filtrados
+        # Crea un nuevo frame con los datos filtrados
         frame = self.create_frame_1(query)
         self.show_frame(frame)
 
@@ -91,15 +115,13 @@ class menu_popup:
         self.thread = threading.Thread(target=self.update_frame_periodically)
         self.thread.daemon = True
         self.thread.start()
-        print("hilo iniciado")
 
-    def stop_thread_frame(self, value):
+    def stop_thread_frame(self):
         self.stop_thread = True
         self.update_frame(self.selecdata.search(
             self.search_data.get()), self.frame_1, "frame_1")
         if self.thread:
             self.thread.join()  # Espera a que el hilo finalice
-        print("Hilo detenido.")
 
     def create_frame(self, title, content):
         """Crear un CTkFrame con título y contenido."""
@@ -110,8 +132,14 @@ class menu_popup:
         content_label.pack(pady=5)
         return frame
 
-    def create_frame_1(self, host_listing):
+    def date(self, event):
+        print("hola")
+        selected_item = tabla.selection()
+        item_values = tabla.item(selected_item[0], "values")
+        print(f"Fila seleccionada: {item_values}")
 
+    def create_frame_1(self, host_listing):
+        global tabla
         frame = ctk.CTkFrame(self.main_frame)
         columnas = ("ID", "Nombre Host", "IP", "Estado")
         tabla = ttk.Treeview(frame, columns=columnas, show="headings")
@@ -124,10 +152,10 @@ class menu_popup:
             tabla.tag_configure("error", background="#8B0000")
             tabla.tag_configure("default", background="#FFFFFF")
 
-    # Agregar filas
+        # Agregar filas
         for fila in host_listing:
+            tabla.bind("<<TreeviewSelect>>", self.date)
 
-            # print(fila)
             state = fila[-1]
             if state == 0:
                 tabla.insert("", "end", values=fila, tags=("error",))
@@ -152,5 +180,15 @@ class menu_popup:
     def show_frame_3(self):
         self.show_frame(self.frame_3)
 
+    def cerrar_ventana(self):
+        if self.app:
+            self.app.destroy()  # Cerrar la ventana
+            self.app = None  # Restablecer self.app a None
+
+            # Habilitar el botón si existe
+            if self.boton:
+                self.boton.configure(state="normal")
+
     def run(self):
-        self.app.mainloop()
+        if self.app:  # Verificar si self.app existe
+            self.app.mainloop()

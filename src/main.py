@@ -72,6 +72,7 @@ bt_menu.place(x=10, y=10)
 
 def poppu(dato):
     popup_1 = popup(dato)
+    popup_1.show_popup(bt_add, bt_start)
     popup_1.run()
 
 
@@ -106,6 +107,7 @@ def start():
     token, chat_id = file_1.get_data()
     if token == "" or chat_id == "":
         popup_1 = popup("seleccione el archivo config.txt")
+        popup_1.show_popup(bt_start, bt_add)
         popup_1.run()
     else:
         sending_info = data_ping(token, chat_id)
@@ -115,6 +117,7 @@ def start():
 
 def show_menu():
     menu_1 = menu_popup()
+    menu_1.show_menu(bt_menu)
     menu_1.run()
 
 

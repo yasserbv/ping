@@ -53,7 +53,7 @@ class database():
         conn.commit()
         conn.close()
 
-    def delete_data(self):
+    def delete_data(self, host):
         conn = sql.connect("hosts.db")
         cursor = conn.cursor()
         data = "DELETE FROM HOSTS"

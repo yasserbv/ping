@@ -4,20 +4,31 @@ import customtkinter as ctk
 class popup:
     _instance = None  # Variable de clase para almacenar la instancia única
 
-    text = ""
-
     def __new__(cls, text=""):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._instance.text = text  # Iniciar el texto con lo que se pase al crear la instancia
-            cls._instance.show_popup()  # Crear la ventana en el primer uso
-        else:
-            cls._instance.text = text  # Actualizar el texto si ya existe la instancia
-            cls._instance.añadir_texto()  # Llamar para actualizar el contenido
+            cls._instance.__init__(text)  # Inicializar la instancia
         return cls._instance  # Devuelve la instancia única
 
-    def show_popup(self):
-        # Crear ventana principal solo si no existe
+    def __init__(self, text=""):
+        self.text = text  # Texto que se mostrará en el popup
+        self.app = None  # Ventana principal (inicialmente no existe)
+        self.textbox = None  # Cuadro de texto (inicialmente no existe)
+        # Referencia al botón en la ventana principal (inicialmente no existe)
+        self.boton = None
+
+    def show_popup(self, boton_1=None, boton_2=None):
+        # Guardar la referencia al botón
+        if boton_1 and boton_2:
+            self.boton_1 = boton_1
+            self.boton_2 = boton_2
+
+        # Verificar si la ventana ya está abierta
+        if self.app is not None and self.app.winfo_exists():
+            self.app.lift()  # Traer la ventana al frente si ya está abierta
+            return  # Salir del método sin crear una nueva ventana
+
+        # Crear ventana principal
         ctk.set_appearance_mode("light")
         self.app = ctk.CTk()
         self.app.title("Popup")
@@ -30,10 +41,31 @@ class popup:
         self.textbox.pack(pady=20)
         self.añadir_texto()  # Añadir el texto al abrir el popup
 
+        # Manejar el cierre de la ventana
+        self.app.protocol("WM_DELETE_WINDOW", self.cerrar_ventana)
+
+        # Deshabilitar el botón si existe
+        if self.boton_1 and self.boton_2:
+            self.boton_1.configure(state="disabled")
+            self.boton_2.configure(state="disabled")
+
     def añadir_texto(self):
-        self.textbox.delete(1.0, "end")  # Limpiar cualquier texto previo
-        self.textbox.insert("end", self.text)  # Añadir el nuevo texto
+        if self.textbox:  # Verificar si self.textbox existe
+            self.textbox.delete(1.0, "end")  # Limpiar cualquier texto previo
+            self.textbox.insert("end", self.text)  # Añadir el nuevo texto
+
+    # Método para cerrar la ventana
+    def cerrar_ventana(self):
+        if self.app:
+            self.app.destroy()  # Cerrar la ventana
+            self.app = None  # Restablecer self.app a None
+
+            # Habilitar el botón si existe
+            if self.boton_1 and self.boton_2:
+                self.boton_1.configure(state="normal")
+                self.boton_2.configure(state="normal")
 
     # Mostrar ventana
     def run(self):
-        self.app.mainloop()
+        if self.app:  # Verificar si self.app existe
+            self.app.mainloop()
