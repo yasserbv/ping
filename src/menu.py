@@ -2,6 +2,7 @@ import customtkinter as ctk
 from database import database
 from tkinter import ttk
 import threading
+from poppu_update import popup_update
 
 
 class menu_popup:
@@ -132,11 +133,12 @@ class menu_popup:
         content_label.pack(pady=5)
         return frame
 
-    def date(self, event):
-        print("hola")
+    def poppu(self, event):
         selected_item = tabla.selection()
         item_values = tabla.item(selected_item[0], "values")
-        print(f"Fila seleccionada: {item_values}")
+        poppo_show = popup_update(item_values)
+        poppo_show.show_popup()
+        poppo_show.run()
 
     def create_frame_1(self, host_listing):
         global tabla
@@ -154,7 +156,7 @@ class menu_popup:
 
         # Agregar filas
         for fila in host_listing:
-            tabla.bind("<<TreeviewSelect>>", self.date)
+            tabla.bind("<<TreeviewSelect>>", self.poppu)
 
             state = fila[-1]
             if state == 0:
